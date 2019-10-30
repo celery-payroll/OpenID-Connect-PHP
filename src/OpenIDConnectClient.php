@@ -268,7 +268,7 @@ class OpenIDConnectClient
      * @return bool
      * @throws OpenIDConnectClientException
      */
-    public function authenticate() {
+    public function authenticate($extraParameters = null) {
 
         // Do a preemptive check to see if the provider has thrown an error from a previous redirect
         if (isset($_REQUEST['error'])) {
@@ -403,7 +403,7 @@ class OpenIDConnectClient
             throw new OpenIDConnectClientException ('Unable to verify JWT claims');
         }
 
-        $this->requestAuthorization();
+        $this->requestAuthorization($extraParameters);
         return false;
 
     }
@@ -590,7 +590,7 @@ class OpenIDConnectClient
      * @return void
      * @throws OpenIDConnectClientException
      */
-    private function requestAuthorization() {
+    private function requestAuthorization($extraParameters = null) {
 
         $auth_endpoint = $this->getProviderConfigValue('authorization_endpoint');
         $response_type = 'code';
@@ -619,6 +619,12 @@ class OpenIDConnectClient
         // If the client has been registered with additional response types
         if (count($this->responseTypes) > 0) {
             $auth_params = array_merge($auth_params, array('response_type' => implode(' ', $this->responseTypes)));
+        }
+
+        
+        // If we have additional parameters for the authorize URL
+        if (is_array($extraParameters)) {
+            $auth_params = array_merge($auth_params, $extraParameters);
         }
 
         $auth_endpoint .= (strpos($auth_endpoint, '?') === false ? '?' : '&') . http_build_query($auth_params, null, '&', $this->enc_type);
